@@ -1,17 +1,19 @@
 const express = require('express');
 const app = express();
 const path = require('path');
+const methodOverride = require('method-override');
 const { v4: uuidv4 } = require('uuid');
 
 // ⇨ '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed'
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(methodOverride('_method'));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 //fake db with an array
-const comments = [
+let comments = [
   {
     id: uuidv4(),
     username: 'Todd',
@@ -51,6 +53,13 @@ app.get('/comments/:id', (req, res) => {
   res.render('comments/show', { comment });
 });
 
+app.get('/comments/:id/edit', (req, res) => {
+  const { id } = req.params;
+
+  const comment = comments.find((c) => c.id === id);
+  res.render('comments/edit', { comment });
+});
+
 app.patch('/comments/:id/', (req, res) => {
   const { id } = req.params;
   const newCommentText = req.body.comment;
@@ -60,6 +69,13 @@ app.patch('/comments/:id/', (req, res) => {
   res.redirect('/comments');
 
   // res.send('all good!!!');
+});
+
+app.delete('/comments/:id', (req, res) => {
+  const { id } = req.params;
+  //to remove comment from the array without mutating the original
+  comments = comments.filter((c) => c.id !== id);
+  res.redirect('/comments');
 });
 
 app.get('/tacos', (req, res) => {
